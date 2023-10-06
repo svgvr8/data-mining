@@ -1,0 +1,15 @@
+minsup: 
+            minconf: 
+            input file: 
+            output name: 
+            Number of items:
+            Number of transactions: 
+            Length of largest frequent k-itemset: 
+            Number of frequent 1-itemsets: 
+            ...
+            Number of frequent k-itemsets: 
+            Total number of frequent itemsets: 
+            Number of high confidence rules: 
+            Rule with highest confidence: 
+            Time to fine the frequent itemsets (s): 
+            Time to find confident rules (s): 
