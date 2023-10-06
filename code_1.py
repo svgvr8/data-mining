@@ -12,7 +12,7 @@ import pandas as pd
 import sys
 
 minimum_support = int(sys.argv[1])
-minimum_confidence = int(sys.argv[2])
+minimum_confidence = float(sys.argv[2])
 input_file_name = sys.argv[3]
 output_file_name = sys.argv[4]
 
