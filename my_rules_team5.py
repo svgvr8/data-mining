@@ -87,13 +87,18 @@ def candidate_merge(prev_freq_itemsets):
 
     return candidate_itemsets 
 
-def pruning(candidate_itemset, k_minus_1_itemset, k):
+def pruning(candidate_itemset, k_minus_1_itemset, k): #FIX 
     pruned_itemsets = []
-    
 
-    
-        
+    for candidate in candidate_itemset:
+        subsets = itertools.combinations(candidate_itemset,k-1)
+        print("subsets: ",*subsets)
+        for subset in subsets:
 
+            if subset in k_minus_1_itemset.values():
+                pruned_itemsets.append(candidate) 
+
+    print(pruned_itemsets)
     return pruned_itemsets
 
 '''
@@ -103,12 +108,12 @@ def candidate_rule_generation(): #will be completed in phase 3
 # =============================================================
 # output file 1
 start = timeit.default_timer()
-F1 = gen_f1(transactions, minimum_support)
-#F1 = {tuple([1]):10, tuple([2]):20, tuple([3]):30}
+#F1 = gen_f1(transactions, minimum_support)
+F1 = {tuple([1]):10, tuple([2]):20, tuple([3]):30}
 filename = f"{output_file_name}_items_team5.txt" #create file 1
 
 print("Creating file 1: %s" % filename)
-f = open(filename, "w")
+#f = open(filename, "w")
 '''
 for item, support in F1.items():
     f.write(f"{item} | {support}\n") #write 1-itemsets to file
@@ -153,6 +158,14 @@ k=2 #set k value to generate 2-itemsets
 L = candidate_merge(F1)
 #print(L)
 print(len(frequent_n_itemset[1]))
+
+L = candidate_merge(frequent_n_itemset[k-1])
+
+L = pruning(L, frequent_n_itemset[k-1], k)
+
+print(f"{k}:\n", L)
+
+exit()
 while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = {}
     L = candidate_merge(frequent_n_itemset[k-1]) #pruning input #if subset is infrequent, remove from L
