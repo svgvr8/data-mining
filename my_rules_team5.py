@@ -1,4 +1,4 @@
-# CAP 5771 Team 5
+#CAP 5771 Team 5
 import pandas as pd
 import sys
 import matplotlib.pyplot as plt
@@ -8,8 +8,8 @@ from collections import defaultdict
 import timeit
 import os
 
-# set arguments
-minimum_support = int(sys.argv[1])
+#set arguments
+minimum_support = int(sys.argv[1]) 
 minimum_confidence = float(sys.argv[2])
 input_file_name = sys.argv[3]
 output_file_name = sys.argv[4]
@@ -17,88 +17,81 @@ output_file_name = sys.argv[4]
 input_file = input_file_name
 
 
-def read_data(
-    file_name,
-):  # Function to read data from a file and return a list of transactions
+def read_data(file_name): # Function to read data from a file and return a list of transactions
     transactions = defaultdict(list)
 
-    with open(file_name, "r") as file:
+    with open(file_name, 'r') as file:
         for line in file:
             transaction_id, item_id = map(int, line.strip().split())
             transactions[transaction_id].append(item_id)
 
     return transactions
 
+transactions = read_data(input_file)  #read input file
 
-transactions = read_data(input_file)  # read input file
+#print(transactions)
 
-# print(transactions)
-
-
-def gen_f1(
-    transactions, min_support
-):  # frequent 1-itemset generation function, needed to start Apriori algorithm
+def gen_f1(transactions, min_support): # frequent 1-itemset generation function, needed to start Apriori algorithm
     item_counts = defaultdict(int)
 
     # Count the occurrences of each item in the transactions
     for transaction in transactions.values():  # Iterate over the lists of item IDs
         for item in transaction:
-            item = tuple([item])
+            item =  tuple([item])
             item_counts[item] += 1
 
-    frequent_1_itemsets = {
-        item: support for item, support in item_counts.items() if support >= min_support
-    }  # Filter items based on minimum support
-    # F1_sorted = {item: support for item, support in sorted(frequent_1_itemsets.items(), key=lambda x: x[1], reverse=True)} #order items in descending support count
+    frequent_1_itemsets = {item: support for item, support in item_counts.items() if support >= min_support} # Filter items based on minimum support
+    #F1_sorted = {item: support for item, support in sorted(frequent_1_itemsets.items(), key=lambda x: x[1], reverse=True)} #order items in descending support count
     return frequent_1_itemsets
 
-    #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                                                                          #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 
 def candidate_merge(prev_freq_itemsets):
     candidate_itemsets = []
+      
+#For k=1
+    temp_k = len(list(prev_freq_itemsets.keys())[1]) #if k=1
 
-    # For k=1
-    temp_k = len(list(prev_freq_itemsets.keys())[1])  # if k=1
-
-    for i in range(len(prev_freq_itemsets)):  # transaction
-        for j in range(i + 1, len(prev_freq_itemsets)):  # items
+    for i in range(len(prev_freq_itemsets)):#transaction
+        for j in range(i + 1, len(prev_freq_itemsets)): #items
+            
             itemset1 = list(prev_freq_itemsets.keys())[i]
             itemset2 = list(prev_freq_itemsets.keys())[j]
             if temp_k == 1:
                 candidate_itemsets.append(tuple(sorted(set(itemset1 + itemset2))))
-
+            
             elif itemset1[:-1] == itemset2[:-1]:
                 # Merge (k-1)-itemsets to create a candidate k-itemset
-                candidate_itemsets.append(tuple(sorted(set(itemset1 + itemset2))))
-
+                candidate_itemsets.append(tuple(sorted(set(itemset1 + itemset2))))    
+    
+    
     return candidate_itemsets
 
-
-def pruning(candidate_itemset, k_minus_1_itemset, k):
+def pruning(candidate_itemset, k_minus_1_itemset, k): 
     pruned_itemsets = []
-
-    if k > 2:
+    
+    if k>2:
         for candidate in candidate_itemset:
-            # print("candidate: ", candidate)
-            subsets = list(itertools.combinations(candidate, k - 1))
-            # print("subsets: ",*subsets)
+            #print("candidate: ", candidate)
+            subsets = list(itertools.combinations(candidate,k-1))
+            #print("subsets: ",*subsets)
             for subset in subsets:
-                # print("subset: ",subset)
-                # print("k-1: ", k_minus_1_itemset)
+                #print("subset: ",subset)
+                #print("k-1: ", k_minus_1_itemset)
 
-                if subset in k_minus_1_itemset.keys():  # k-1 is a dictionary
-                    pruned_itemsets.append(candidate)
-                    break  # exit loop if first subset is in
+                if subset in k_minus_1_itemset.keys(): #k-1 is a dictionary
+                    pruned_itemsets.append(candidate) 
+                    break    #exit loop if first subset is in 
 
-        # print("pruned itemset: ",pruned_itemsets)
-        return pruned_itemsets  # list of lists
-
+        #print("pruned itemset: ",pruned_itemsets)
+        return pruned_itemsets #list of lists
+    
     else:
         return candidate_itemset
 
-
-def support_count(candidate_itemsets, min_support, transactions, k):
+def support_count(candidate_itemsets,min_support, transactions, k):
     support_itemsets = {}
     removed_itemsets = []
 
@@ -119,66 +112,76 @@ def support_count(candidate_itemsets, min_support, transactions, k):
 
     return support_itemsets
 
+def confidence(frequent_n_itemset, min_confidence, k):
+    
+    confidence_rules = []
+    for k in frequent_n_itemset: 
+        for itemset in frequent_n_itemset[k]:
 
-# ----------------------START HERE----------------------
+            LHS = {itemset}
+            RHS = set(itemset) - LHS
+            confidence = LHS.values() / RHS.values()
+
+            if confidence >= min_confidence:
+                confidence_rules.append((LHS, RHS, confidence))
+
+            #generate candidates
+            #start with rules that have 1 items on RHS
+
+            #create dictionary and store set as key
+            #define keys
+
+            #Rules = {rhs:conf}
+            #list of sets
+    
+    return confidence_rules
+
+#----------------------START HERE----------------------
+
+filename = f"{output_file_name}_items_team5.txt" #create file 1
+
+print("Creating file 1: %s" % filename)
+
+f = open(filename, "w")
+
 F1 = gen_f1(transactions, minimum_support)
-# F1 = {tuple([1]):10, tuple([2]):20, tuple([3]):30}
-# F1 = [[1,2],[3,4],[5,6]]
-frequent_n_itemset = {}  # set 1-itemsets for apriori beginning
+frequent_n_itemset = {} #set 1-itemsets for apriori beginning
 frequent_n_itemset[1] = F1
 
-k = 2  # set k value to generate 2-itemsets
+k=2 #set k value to generate 2-itemsets
 
-
-# L = candidate_merge(frequent_n_itemset[k-1]) #test candidates
-# L = pruning(L, frequent_n_itemset[k-1], k)  #test pruning
-# print(f"pruned itemsets-{k}:\n", L)
-# frequent_n_itemset[2] = L
-
-
-while len(frequent_n_itemset[k - 1]) > 1:
+while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = {}
-    L = candidate_merge(
-        frequent_n_itemset[k - 1]
-    )  # pruning input #if subset is infrequent, remove from L
+    L = candidate_merge(frequent_n_itemset[k-1]) #pruning input #if subset is infrequent, remove from L
     print(f"{k}th level candidate itemsets: {len(L)}")
-    L = pruning(L, frequent_n_itemset[k - 1], k)
+    L = pruning(L, frequent_n_itemset[k-1], k)
     print(f"{k}th level pruned itemsets: {len(L)}")
     frequent_n_itemset[k] = support_count(L, minimum_support, transactions, k)
     print(f"{k}th level frequent itemsets: {len(frequent_n_itemset[k])}")
     print(frequent_n_itemset[k])
 
-    # iterate through k le
 
-    k = k + 1
-    # print("k: ", k)
+    for freq_itemset, freq_support in frequent_n_itemset[k].items():
+            f.write(f"{freq_itemset} | {freq_support}\n")
 
+    k = k+1
 
+f.close()
 exit()
+    #pruning, only append itemsets that survived
+    #support count
+    #elimination
 
 
-# pruning, only append itemsets that survived
-# support count
-# elimination
+
+#rule generation
 
 
-# rule generation
-"""
-for k in frequent_n_itemset: 
-    for itemset in frequent_n_itemset[k]:
-        #generate candidates
-        #start with rules that have 1 items on RHS
 
-        #create dictionary and store set as key
-        #define keys
+#create output file        
 
-        #Rules = {rhs:conf}
-        #list of sets
 
-"""
-# create output file
 
-stop = timeit.default_timer()
 
 # ======================================================
 # output file 2                                                 Will be completed in Phase 3
@@ -221,11 +224,11 @@ f.write(
             Rule with highest confidence: 
             Time to find the frequent itemsets (s): {stop} - {start}
             Time to find confident rules (s): """
-)
+)            
 
 f.close()
-# ======================================
-# generate itemset plot
+#======================================
+#generate itemset plot
 
 # Initialize empty dictionary to store the support counts
 support_counts = {}
@@ -270,37 +273,3 @@ for i in range(num_subplots):
     plt.show()
 
 plt.savefig("plot.png")
-# ======================================
-# generate itemset plot
-
-"""
-Things to complete
-
-Phase 1: Complete (update plot code)
-Phase 2: Complete
-Phase 3: Need to finish
-
-Output file 1:
-    -change the format. keeps writing with []
-    -only writes up to 2-itemsets
-
-Output file 2:
-    -Will be completed in phase 3
-
-Output file 3:
-    -length of largest itemset
-    -number of k-itemsets
-    -everything else
-
-Plot items file:
-    -bar plot with the number of frequent k-itemsets for different values of k
-
-Plot rules file:
-    -bar plot with the number of high-confidence rules for different values of k
-
-
-Run code with:    
-    -minsup: {50, 100, 150, 200}
-    -minconf: {0.8, 0.95} (For each value of minconf, generate two bar charts (or line charts).)
-    
-"""
