@@ -1,102 +1,79 @@
-from itertools import combinations
+from mlxtend.preprocessing import TransactionEncoder
+from mlxtend.frequent_patterns import apriori
+from mlxtend.frequent_patterns import association_rules
+import pandas as pd
+import time
 
-# Reading the data
-with open("small", "r") as file:
-    transactions = [line.strip().split() for line in file]
+data = [
+    [0, 1],
+    [0, 2],
+    [0, 3],
+    [0, 4],
+    [0, 5],
+    [0, 6],
+    [0, 7],
+    [0, 8],
+    [0, 9],
+    [0, 10],
+    [0, 11],
+    [0, 12],
+    [0, 13],
+    [0, 14],
+    [0, 15],
+    [0, 16],
+]
 
-# Hard coded values
-minsup = 0.016361256544502618
-minconf = 0.8
-
-
-# Apriori function to compute frequent itemsets
-def apriori(transactions, minsup):
-    all_items = set(item for transaction in transactions for item in transaction)
-    candidates = [frozenset([item]) for item in all_items]
-    frequent_itemsets = []
-
-    while candidates:
-        itemset_counts = {candidate: 0 for candidate in candidates}
-
-        for transaction in transactions:
-            for candidate in candidates:
-                if candidate.issubset(transaction):
-                    itemset_counts[candidate] += 1
-
-        new_frequent_itemsets = [
-            itemset
-            for itemset, count in itemset_counts.items()
-            if count / len(transactions) >= minsup
-        ]
-        frequent_itemsets.extend(new_frequent_itemsets)
-
-        candidates = set()
-        for itemset1 in new_frequent_itemsets:
-            for itemset2 in new_frequent_itemsets:
-                new_itemset = itemset1.union(itemset2)
-                if len(new_itemset) == len(itemset1) + 1:
-                    candidates.add(frozenset(new_itemset))
-        candidates = list(candidates)
-
-    return frequent_itemsets
+te = TransactionEncoder()
+te_ary = te.fit(data).transform(data)
+df = pd.DataFrame(te_ary, columns=te.columns_)
 
 
-# Function to generate high confidence rules
-def generate_rules(frequent_itemsets, minconf):
-    rules = []
-    for itemset in frequent_itemsets:
-        n = len(itemset)
-        if n > 1:
-            for i in range(1, n):
-                for antecedent in combinations(itemset, i):
-                    antecedent = frozenset(antecedent)
-                    consequent = itemset - antecedent
-                    antecedent_support = sum(
-                        1
-                        for transaction in transactions
-                        if antecedent.issubset(transaction)
-                    ) / len(transactions)
-                    itemset_support = sum(
-                        1
-                        for transaction in transactions
-                        if itemset.issubset(transaction)
-                    ) / len(transactions)
-                    confidence = itemset_support / antecedent_support
-                    if confidence >= minconf:
-                        rules.append((antecedent, consequent, confidence))
-    return rules
+minsup = 0.010
+frequent_itemsets = apriori(df, min_support=minsup, use_colnames=True)
+
+mincof = 0.8
+rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=mincof)
+
+# Number of items
+num_items = len(te.columns_)
+
+# Number of transactions
+num_transactions = len(data)
+
+# Length of the largest frequent k-itemset
+max_k = frequent_itemsets["itemsets"].apply(len).max()
+
+# Number of frequent k-itemsets
+k_counts = frequent_itemsets["itemsets"].apply(len).value_counts().sort_index()
+
+# Total number of frequent itemsets
+total_frequent_itemsets = len(frequent_itemsets)
+
+# Number of high confidence rules
+num_high_confidence_rules = len(rules)
+
+# The rule with the highest confidence
+highest_conf_rule = rules.iloc[rules["confidence"].idxmax()]
+
+# Print Results
+print(f"Number of items: {num_items}")
+print(f"Number of transactions: {num_transactions}")
+print(f"The length of the largest frequent k-itemset: {max_k}")
+for k, count in k_counts.items():
+    print(f"Number of frequent {k}-itemsets: {count}")
+print(f"Total number of frequent itemsets: {total_frequent_itemsets}")
+print(f"Number of high confidence rules: {num_high_confidence_rules}")
+print(
+    f"The rule with the highest confidence: {highest_conf_rule['antecedents']} => {highest_conf_rule['consequents']} with confidence {highest_conf_rule['confidence']}"
+)
 
 
-# Compute the frequent itemsets and high confidence rules
-frequent_itemsets = apriori(transactions, minsup)
-confident_rules = generate_rules(frequent_itemsets, minconf)
+start_time = time.time()
+frequent_itemsets = apriori(df, min_support=minsup, use_colnames=True)
+end_time = time.time()
+print(f"Time in seconds to find the frequent itemsets: {end_time - start_time}")
 
-# Extract metrics
-output = {
-    "Number of items": len(
-        set(item for transaction in transactions for item in transaction)
-    ),
-    "Number of transactions": len(transactions),
-    "The length of the largest frequent k-itemset": max(map(len, frequent_itemsets)),
-    "Number of frequent 1-itemsets": sum(
-        1 for itemset in frequent_itemsets if len(itemset) == 1
-    ),
-    "Number of frequent 2-itemsets": sum(
-        1 for itemset in frequent_itemsets if len(itemset) == 2
-    ),
-    "Number of frequent 3-itemsets": sum(
-        1 for itemset in frequent_itemsets if len(itemset) == 3
-    ),
-    "Number of frequent 4-itemsets": sum(
-        1 for itemset in frequent_itemsets if len(itemset) == 4
-    ),
-    "Total number of frequent itemsets": len(frequent_itemsets),
-    "Number of high confidence rules": len(confident_rules),
-    "The rule with the highest confidence": max(
-        confident_rules, key=lambda rule: rule[2]
-    )
-    if confident_rules
-    else None,
-}
-
-print(output)
+start_time = time.time()
+rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=mincof)
+end_time = time.time()
+print(f"Time in seconds to find the confident rules: {end_time - start_time}")
