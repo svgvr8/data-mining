@@ -273,37 +273,3 @@ for i in range(num_subplots):
     plt.show()
 
 plt.savefig("plot.png")
-#======================================
-#generate itemset plot
-
-'''
-Things to complete
-
-Phase 1: Complete (update plot code)
-Phase 2: Complete
-Phase 3: Need to finish
-
-Output file 1:
-    -change the format. keeps writing with []
-    -only writes up to 2-itemsets
-
-Output file 2:
-    -Will be completed in phase 3
-
-Output file 3:
-    -length of largest itemset
-    -number of k-itemsets
-    -everything else
-
-Plot items file:
-    -bar plot with the number of frequent k-itemsets for different values of k
-
-Plot rules file:
-    -bar plot with the number of high-confidence rules for different values of k
-
-
-Run code with:    
-    -minsup: {50, 100, 150, 200}
-    -minconf: {0.8, 0.95} (For each value of minconf, generate two bar charts (or line charts).)
-    
-'''
