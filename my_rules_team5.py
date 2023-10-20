@@ -112,24 +112,43 @@ def support_count(candidate_itemsets,min_support, transactions, k):
 
     return support_itemsets
 
+def confidence(frequent_n_itemset, min_confidence, k):
+    
+    confidence_rules = []
+    for k in frequent_n_itemset: 
+        for itemset in frequent_n_itemset[k]:
 
+            LHS = {itemset}
+            RHS = set(itemset) - LHS
+            confidence = LHS.values() / RHS.values()
+
+            if confidence >= min_confidence:
+                confidence_rules.append((LHS, RHS, confidence))
+
+            #generate candidates
+            #start with rules that have 1 items on RHS
+
+            #create dictionary and store set as key
+            #define keys
+
+            #Rules = {rhs:conf}
+            #list of sets
+    
+    return confidence_rules
 
 #----------------------START HERE----------------------
+
+filename = f"{output_file_name}_items_team5.txt" #create file 1
+
+print("Creating file 1: %s" % filename)
+
+f = open(filename, "w")
+
 F1 = gen_f1(transactions, minimum_support)
-#F1 = {tuple([1]):10, tuple([2]):20, tuple([3]):30}
-#F1 = [[1,2],[3,4],[5,6]]
 frequent_n_itemset = {} #set 1-itemsets for apriori beginning
 frequent_n_itemset[1] = F1
 
 k=2 #set k value to generate 2-itemsets
-
-
-#L = candidate_merge(frequent_n_itemset[k-1]) #test candidates
-#L = pruning(L, frequent_n_itemset[k-1], k)  #test pruning 
-#print(f"pruned itemsets-{k}:\n", L)
-#frequent_n_itemset[2] = L
-
-
 
 while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = {}
@@ -140,17 +159,15 @@ while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = support_count(L, minimum_support, transactions, k)
     print(f"{k}th level frequent itemsets: {len(frequent_n_itemset[k])}")
     print(frequent_n_itemset[k])
-    
-    #iterate through k le
 
+
+    for freq_itemset, freq_support in frequent_n_itemset[k].items():
+            f.write(f"{freq_itemset} | {freq_support}\n")
 
     k = k+1
-    #print("k: ", k)
 
-    
+f.close()
 exit()
-
-
     #pruning, only append itemsets that survived
     #support count
     #elimination
@@ -158,22 +175,13 @@ exit()
 
 
 #rule generation
-'''
-for k in frequent_n_itemset: 
-    for itemset in frequent_n_itemset[k]:
-        #generate candidates
-        #start with rules that have 1 items on RHS
 
-        #create dictionary and store set as key
-        #define keys
 
-        #Rules = {rhs:conf}
-        #list of sets
 
-'''
 #create output file        
 
-stop = timeit.default_timer()
+
+
 
 # ======================================================
 # output file 2                                                 Will be completed in Phase 3
