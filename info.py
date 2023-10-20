@@ -3,25 +3,42 @@ import numpy as np
 from itertools import combinations
 import time
 
-# Provided data
-data = [
-    [0, 1],
-    [0, 2],
-    [0, 3],
-    [0, 4],
-    [0, 5],
-    [0, 6],
-    [0, 7],
-    [0, 8],
-    [0, 9],
-    [0, 10],
-    [0, 11],
-    [0, 12],
-    [0, 13],
-    [0, 14],
-    [0, 15],
-    [0, 16],
-]
+# Open the input file "small.txt" for reading
+with open("small", "r") as file:
+    # Initialize an empty list to store the data
+    data = []
+
+    # Read each line from the file
+    for line in file:
+        # Split the line into a list of integers
+        values = [int(x) for x in line.strip().split()]
+
+        # Append the list of values to the data list
+        data.append(values)
+
+# Now, 'data' contains the data read from the input file
+print(data)
+
+
+# # Provided data
+# data = [
+#     [0, 1],
+#     [0, 2],
+#     [0, 3],
+#     [0, 4],
+#     [0, 5],
+#     [0, 6],
+#     [0, 7],
+#     [0, 8],
+#     [0, 9],
+#     [0, 10],
+#     [0, 11],
+#     [0, 12],
+#     [0, 13],
+#     [0, 14],
+#     [0, 15],
+#     [0, 16],
+# ]
 
 # Convert to DataFrame
 df = pd.DataFrame(data, columns=["item_1", "item_2"])
