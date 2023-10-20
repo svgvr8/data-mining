@@ -40,7 +40,7 @@ data = [
 ]
 
 # Generate rules for specified confidence thresholds and save them to files
-minconfs = [0.01, 0.2, 0.8, 0.95]
+minconfs = [0.8, 0.95]
 
 
 # Generate frequent itemsets
