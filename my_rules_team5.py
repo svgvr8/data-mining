@@ -110,43 +110,33 @@ def support_count(candidate_itemsets,min_support, transactions, k):
 
 
 def candidate_rules(freq_k_itemsets, min_confidence):
-    candidate_rules = []
+    confidence_rules = {} #make dict, keys=len(RHS), values=list of RHS,LHS,support, confidence, 
+    #might need to define in main program
     #X -> Y - X
-    for k in freq_k_itemsets:
-        if k >= 2:
-            for itemset in freq_k_itemsets[k]:
-                #print(itemset)
-                itemset = list(itemset)
-                
-                LHS =set(itemset[:-1])
-                #print("LHS: ", LHS)
-                RHS = set(itemset) - LHS
-                #print("RHS: ", RHS)
-                itemset = tuple(itemset)
-                LHS = tuple(LHS)
-                RHS = tuple(RHS)
-                confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
-                #print("confidence: ", confidence)
-                #if confidence >= min_confidence:
-                candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
+    #[ABCD]
+    #ABC => D
+    #ABD => C
 
-    print("candidate rules: ", candidate_rules)
-
-        
-    return candidate_rules
-     
-def candidate_rules2(freq_k_itemsets, min_confidence):
-    candidate_rules = []
-    #X -> Y - X
     for k in freq_k_itemsets:
-        if k >= 2:
-            for itemset in freq_k_itemsets[k]:  
-                itemset = list(itemset)                                 
-                for RHS in itemset:
-                    
-                    LHS = set(itemset) - set(freq_k_itemsets[k][RHS])
+        if k >= 2: #move loops to main
+            for itemset in freq_k_itemsets[k]: 
+                            #call next level function
+                for RHS in itemset: #========= for item in LHS
+                    #itemset = list(itemset)
+                    LHS = set(itemset) - set([RHS]) #this in another function
                     print("LHS: ", LHS)
-                    
+                    print("RHS: ", RHS) #<==================
+                                                            #generate next level(LHS, RHS(empty), freq k itemsets) (first time is itemsets, )
+                                                            #check if they have enough confidence
+                                                            #if true, save to confidence_rules
+                                                            #call same function() using an iterable to generate next level
+
+
+
+                    #first function should move 1 item to other side and compute confidence
+                    #print(itemset)
+                    #itemset = list(itemset)
+                    '''
                     LHS =set(itemset[:-1])
                     #print("LHS: ", LHS)
                     RHS = set(itemset) - LHS
@@ -158,23 +148,23 @@ def candidate_rules2(freq_k_itemsets, min_confidence):
                     #print("confidence: ", confidence)
                     #if confidence >= min_confidence:
                     candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
-
-    print("candidate rules: ", candidate_rules)
+                    '''
+    
+    print("candidate rules: ", candidate_rules) #recursion
+    #maybe make secondary function
 
         
     return candidate_rules
-'''
-    print("candidate rules: ", candidate_rules)
+     
 
-    for rule in candidate_rules:
-            #LHS, RHS, confidence, support = rule
-            #f.write
-            #one rule per itemset
-            #ex [1,2,3,4]
+def generate_next_confidence_level(LHS, RHS, freq_k_itemsets, min_confidence):
+    for RHS in itemset: #========= for item in LHS
+                    #itemset = list(itemset)
+                    LHS = set(itemset) - set([RHS]) #this in another function
+                    print("LHS: ", LHS)
+                    print("RHS: ", RHS) 
 
-            for RHS in itemset:
-                #LHS = set(itemset) - set(RHS)     
-'''
+
 def extract_k_counts(filename):
     k_counts = defaultdict(int)
     with open(filename, "r") as file:
@@ -211,8 +201,8 @@ while(len(frequent_n_itemset[k-1]) > 1):
     for freq_itemset, freq_support in frequent_n_itemset[k].items():
             f.write(f"{freq_itemset} | {freq_support}\n")
 
-    s = candidate_rules2(frequent_n_itemset, minimum_confidence)
-    print(s)
+    #s = candidate_rules(frequent_n_itemset, minimum_confidence)
+    #print(s)
     k = k+1
 
 
