@@ -164,6 +164,16 @@ def generate_next_confidence_level(LHS, RHS, freq_k_itemsets, min_confidence):
                     print("LHS: ", LHS)
                     print("RHS: ", RHS) 
 
+                    # global candidate_rules
+                    # nonlocal candidate_rules
+
+                    confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
+                    #print("confidence: ", confidence)
+                    if confidence >= min_confidence:
+                        candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
+
+    return generate_next_confidence_level()                    
+
 
 def extract_k_counts(filename):
     k_counts = defaultdict(int)
@@ -185,6 +195,8 @@ frequent_n_itemset = {} #set 1-itemsets for apriori beginning
 frequent_n_itemset[1] = F1
 
 k=2 #set k value to generate 2-itemsets
+
+candidate_rules = []
 
 while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = {}
