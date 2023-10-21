@@ -119,7 +119,8 @@ def candidate_rules(freq_k_itemsets, min_confidence):
 
     for k in freq_k_itemsets:
         if k >= 2: #move loops to main
-            for itemset in freq_k_itemsets[k]: 
+            for itemset in freq_k_itemsets[k]:
+                print("itemset type: ", type(itemset)) 
                             #call next level function
                 for RHS in itemset: #========= for item in LHS
                     #itemset = list(itemset)
@@ -150,29 +151,35 @@ def candidate_rules(freq_k_itemsets, min_confidence):
                     candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
                     '''
     
-    print("candidate rules: ", candidate_rules) #recursion
+    #print("candidate rules: ", candidate_rules) #recursion
     #maybe make secondary function
 
         
     return candidate_rules
-     
 
 def generate_next_confidence_level(LHS, RHS, freq_k_itemsets, min_confidence):
-    for RHS in itemset: #========= for item in LHS
-                    #itemset = list(itemset)
-                    LHS = set(itemset) - set([RHS]) #this in another function
-                    print("LHS: ", LHS)
-                    print("RHS: ", RHS) 
+    for RHS in LHS: #========= for item in LHS
+        #itemset = list(itemset)
+        LHS = set(LHS) - set([RHS]) #this in another function
+        print("LHS: ", LHS)
+        print("RHS: ", RHS) 
+        
+        LHS  = tuple(LHS)
+        #RHS = list(RHS)
+        # global candidate_rules
+        # nonlocal candidate_rules
 
-                    # global candidate_rules
-                    # nonlocal candidate_rules
+        if len(LHS) >= 1:
+            confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
+            #print("confidence: ", confidence)
+            if confidence >= min_confidence:
+                candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
 
-                    confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
-                    #print("confidence: ", confidence)
-                    if confidence >= min_confidence:
-                        candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
-
-    return generate_next_confidence_level()                    
+    #LHS = tuple(LHS)
+    #RHS = tuple(RHS)
+    print(candidate_rules)
+    return candidate_rules
+    #generate_next_confidence_level(LHS, RHS, freq_k_itemsets, min_confidence)                    
 
 
 def extract_k_counts(filename):
@@ -213,10 +220,14 @@ while(len(frequent_n_itemset[k-1]) > 1):
     for freq_itemset, freq_support in frequent_n_itemset[k].items():
             f.write(f"{freq_itemset} | {freq_support}\n")
 
-    #s = candidate_rules(frequent_n_itemset, minimum_confidence)
-    #print(s)
+    # s = candidate_rules(frequent_n_itemset, minimum_confidence)
+    # print(s)
     k = k+1
 
+for k in frequent_n_itemset:
+        if k >= 2: #move loops to main
+            for itemset in frequent_n_itemset[k]:
+                generate_next_confidence_level(itemset, set(), frequent_n_itemset, minimum_confidence)
 
 f.close()
 exit()
