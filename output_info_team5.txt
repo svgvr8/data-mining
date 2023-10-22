@@ -12,5 +12,5 @@ Number of frequent 3-itemsets: 5
 Total number of frequent itemsets: 148
 Number of high confidence rules: 15
 Rule with highest confidence: 58 326 | 1 | 0.05 | 0.9
-Time to find the frequent itemsets (s): 25.02
-Time to find confident rules (s): 0.15
+Time to find the frequent itemsets (s): 24.72
+Time to find confident rules (s): 0.05

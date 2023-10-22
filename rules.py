@@ -39,7 +39,7 @@ print("Identifying popular items...")
 
 min_support_count = 120  # Set your desired threshold here
 min_support = min_support_count / num_transactions  # Convert to relative support
-min_conf = 0.9
+min_conf = 0.8
 
 
 def compute_frequent_itemsets(sparse_matrix, unique_items, min_support):
