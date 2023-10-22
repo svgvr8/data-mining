@@ -110,43 +110,39 @@ def support_count(candidate_itemsets,min_support, transactions, k):
 
 
 def candidate_rules(freq_k_itemsets, min_confidence):
-    candidate_rules = []
+    confidence_rules = [] #make dict, keys=len(RHS), values=list of RHS,LHS,support, confidence, 
+    #might need to define in main program
     #X -> Y - X
+    #[ABCD]
+    #ABC => D
+    #ABD => C
+
     for k in freq_k_itemsets:
-        if k >= 2:
+        if k >= 2: #move loops to main
             for itemset in freq_k_itemsets[k]:
-                #print(itemset)
-                itemset = list(itemset)
                 
-                LHS =set(itemset[:-1])
-                #print("LHS: ", LHS)
-                RHS = set(itemset) - LHS
-                #print("RHS: ", RHS)
-                itemset = tuple(itemset)
-                LHS = tuple(LHS)
-                RHS = tuple(RHS)
-                confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
-                #print("confidence: ", confidence)
-                #if confidence >= min_confidence:
-                candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
-
-    print("candidate rules: ", candidate_rules)
-
-        
-    return candidate_rules
-     
-def candidate_rules2(freq_k_itemsets, min_confidence):
-    candidate_rules = []
-    #X -> Y - X
-    for k in freq_k_itemsets:
-        if k >= 2:
-            for itemset in freq_k_itemsets[k]:  
-                itemset = list(itemset)                                 
-                for RHS in itemset:
-                    
-                    LHS = set(itemset) - set(freq_k_itemsets[k][RHS])
+                            #call next level function
+                for RHS in itemset: #========= for item in LHS
+                    #itemset = list(itemset)
+                    LHS = set(itemset) - set([RHS]) #this in another function
                     print("LHS: ", LHS)
-                    
+                    print("RHS: ", RHS) #<==================
+                                                            #generate next level(LHS, RHS(empty), freq k itemsets) (first time is itemsets, )
+                                                            #check if they have enough confidence
+                                                            #if true, save to confidence_rules
+                                                            #call same function() using an iterable to generate next level
+                    LHS = tuple(LHS)
+                    if len(LHS) >= 1:
+                        confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
+                        support = freq_k_itemsets[k][itemset]/len(transactions)
+                        print("confidence: ", confidence)
+                        if confidence >= min_confidence:
+                            confidence_rules.append([LHS, RHS,round(support,2), round(confidence,2)]) #, freq_k_itemsets[k][itemset]
+
+                    #first function should move 1 item to other side and compute confidence
+                    #print(itemset)
+                    #itemset = list(itemset)
+                    '''
                     LHS =set(itemset[:-1])
                     #print("LHS: ", LHS)
                     RHS = set(itemset) - LHS
@@ -158,23 +154,44 @@ def candidate_rules2(freq_k_itemsets, min_confidence):
                     #print("confidence: ", confidence)
                     #if confidence >= min_confidence:
                     candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
+                    '''
+    
+    print("confidence rules: ", confidence_rules) #recursion   
+    #maybe make secondary function 
+    return confidence_rules
 
-    print("candidate rules: ", candidate_rules)
-
+def generate_next_confidence_level(LHS, RHS, freq_k_itemsets, min_confidence):
+    for RHS in LHS: #========= for item in LHS
+        #RHS = [RHS]
         
-    return candidate_rules
-'''
-    print("candidate rules: ", candidate_rules)
+        LHS = set(LHS) - set([RHS]) #this in another function
+        print("LHS: ", LHS)
+        print("RHS: ", RHS) 
+        
+        LHS  = tuple(LHS)
+        #RHS = list(RHS)
+        # global candidate_rules
+        # nonlocal candidate_rules
 
+        if len(LHS) >= 1:
+            confidence = freq_k_itemsets[k][itemset]/ freq_k_itemsets[k-1][LHS] #get support from freq itemsets dictionary
+            print("confidence: ", confidence)
+            if confidence >= min_confidence:
+                candidate_rules.append([LHS, RHS, confidence, freq_k_itemsets[k][itemset]])
+    
+    
     for rule in candidate_rules:
-            #LHS, RHS, confidence, support = rule
-            #f.write
-            #one rule per itemset
-            #ex [1,2,3,4]
+        print("rule: ", rule)
+        if len(rule[0]) > 1:
+            generate_next_confidence_level(rule[0], rule[1], freq_k_itemsets, min_confidence)            
 
-            for RHS in itemset:
-                #LHS = set(itemset) - set(RHS)     
-'''
+    #LHS = tuple(LHS)
+    #RHS = tuple(RHS)
+    print("candidate rules ",candidate_rules)
+    return candidate_rules
+    #return candidate_rules
+    #generate_next_confidence_level(candidate_rules[0], candidate_rules[1], candidate_rules[2], min_confidence)                    
+
 def extract_k_counts(filename):
     k_counts = defaultdict(int)
     with open(filename, "r") as file:
@@ -185,7 +202,8 @@ def extract_k_counts(filename):
     return k_counts
 
 #----------------------START HERE----------------------
-start = timeit
+start = timeit.default_timer()
+#create files
 filename = f"{output_file_name}_items_team5.txt" #create file 1
 print("Creating file 1: %s" % filename)
 f = open(filename, "w")
@@ -195,6 +213,8 @@ frequent_n_itemset = {} #set 1-itemsets for apriori beginning
 frequent_n_itemset[1] = F1
 
 k=2 #set k value to generate 2-itemsets
+
+#candidate_rules = []
 
 while(len(frequent_n_itemset[k-1]) > 1):
     frequent_n_itemset[k] = {}
@@ -209,27 +229,34 @@ while(len(frequent_n_itemset[k-1]) > 1):
     print(frequent_n_itemset[k])
 
     for freq_itemset, freq_support in frequent_n_itemset[k].items():
-            f.write(f"{freq_itemset} | {freq_support}\n")
-
-    s = candidate_rules2(frequent_n_itemset, minimum_confidence)
-    print(s)
+            clean_string = " ".join(map(str, freq_itemset))
+            f.write(f"{clean_string} | {freq_support}\n")
+    
+    # s = candidate_rules(frequent_n_itemset, minimum_confidence)
+    # print(s)
     k = k+1
 
-
-f.close()
-exit()
-s = {}
-
-
+start1 = timeit.default_timer()    
 for k in frequent_n_itemset:
-    if k >= 2:
-        for itemset in frequent_n_itemset[k]:
-            print(itemset)
-            s = candidate_rules(itemset, minimum_confidence)
+    s = candidate_rules(frequent_n_itemset, minimum_confidence)
+stop1 = timeit.default_timer()
+# for k in frequent_n_itemset:
+#         if k >= 2: #move loops to main
+#             for itemset in frequent_n_itemset[k]:
+#                 generate_next_confidence_level(itemset, set(), frequent_n_itemset, minimum_confidence)
+print(f"Created {filename}.txt")
+f.close()
+stop = timeit.default_timer()
+
+print("runtime supp=50 conf=0.8: ", (stop-start))
+
+# for k in frequent_n_itemset:
+#     if k >= 2:
+#         for itemset in frequent_n_itemset[k]:
+#             print(itemset)
+#             s = candidate_rules(itemset, minimum_confidence)
       
-print("s",s)            
-    
-exit()
+# print("s",s)            
 # ======================================================
 # output file 2                                                 Will be completed in Phase 3
 if minimum_confidence != -1:
@@ -238,42 +265,62 @@ if minimum_confidence != -1:
     print("Creating file 2: %s" % filename)
     f = open(filename, "w")
 
-    for item, support in F1.items():
-        f.write(f"LHS | RHS | SUPPORT | CONFIDENCE\n")
+    for rule in s:
+        clean_string = " ".join(map(str, rule[0]))
+        f.write(f"{clean_string} | {rule[1]} | {rule[2]} | {rule[3]}\n")
 
     f.close()
+    print(f"Created {filename}.txt")
 else:
     print("confidence = -1, not generating rules file")
+
+    
 # ======================================================
 # output file 3                                             Will be completed in Phase 3
 filename = f"{output_file_name}_info_team5.txt"
+
+count_item = 0
+for transaction in transactions.values():
+    for item in transaction:
+        count_item += 1
+        
+
 
 print("Creating file 3: %s" % filename)
 f = open(filename, "w")
 
 f.write(
-    f"""
-            minsup: {minimum_support} 
-            minconf: {minimum_confidence}
-            input file: {input_file_name}
-            output name: {output_file_name}
-            Number of items: {transactions.values()}
-            Number of transactions: {len(transactions)}
-            Length of largest frequent k-itemset: Placeholder\n"""
+f"""
+minsup: {minimum_support} 
+minconf: {minimum_confidence}
+input file: {input_file_name}
+output name: {output_file_name}
+Number of items: {count_item}
+Number of transactions: {len(transactions)}
+Length of largest frequent k-itemset: {k-1}"""
 )
+for k in frequent_n_itemset:
+    if len(frequent_n_itemset[k].keys()) > 0:
+        f.write(f"\nNumber of frequent {k}-itemsets: {len(frequent_n_itemset[k].keys())}")
+
+    total_k_itemsets = 0
+    for k in frequent_n_itemset:
+        total_k_itemsets += len(frequent_n_itemset[k].keys())
+
+highest_confidence = max(s, key=lambda inner_list: inner_list[3])
+clean_string = " ".join(map(str, highest_confidence[0]))
+
 f.write(
-    f"""            
-            Number of frequent 1-itemsets: {len(F1.items)}
-            ...
-            Number of frequent k-itemsets: 
-            Total number of frequent itemsets: 
-            Number of high confidence rules: 
-            Rule with highest confidence: 
-            Time to find the frequent itemsets (s): {stop} - {start}
-            Time to find confident rules (s): """
+    f"""
+Total number of frequent itemsets: {total_k_itemsets}
+Number of high confidence rules: {len(s)}
+Rule with highest confidence: {clean_string} | {highest_confidence[1]} | {highest_confidence[2]} | {highest_confidence[3]}
+Time to find the frequent itemsets (s): {round((stop-start),2)}
+Time to find confident rules (s): {round((stop1-start1),2)}"""
 )            
 
 f.close()
+exit()
 #======================================
 #generate itemset plot
 

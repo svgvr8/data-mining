@@ -1,103 +1,108 @@
 import pandas as pd
 import numpy as np
-from itertools import combinations
+from scipy.sparse import lil_matrix, csr_matrix
+
+# --- Read and organize transactions from the file ---
+with open("small", "r") as file:
+    lines = file.readlines()
+
+transactions_dict = {}
+for line in lines:
+    transaction_id, item_id = map(int, line.split())
+    if transaction_id not in transactions_dict:
+        transactions_dict[transaction_id] = []
+    transactions_dict[transaction_id].append(item_id)
+
+transactions = list(transactions_dict.values())
+
+# --- Begin the data processing ---
+print("Starting the process...")
+
+# Organizing each sale into a sparse matrix for memory efficiency
+print("Organizing sales into a table...")
+unique_items = sorted(list(set(item for sublist in transactions for item in sublist)))
+num_transactions = len(transactions)
+num_items = len(unique_items)
+
+sparse_matrix = lil_matrix((num_transactions, num_items), dtype=int)
+for i, transaction in enumerate(transactions):
+    indices = [unique_items.index(item) for item in transaction]
+    sparse_matrix[i, indices] = 1
+
+print(f"Sparse matrix created with shape: {sparse_matrix.shape}")
+
+# Convert the matrix to CSR format for efficient row-based operations
+sparse_matrix = csr_matrix(sparse_matrix)
+
+# Identify items that are commonly bought by customers
+print("Identifying popular items...")
+
+min_support_count = 120  # Set your desired threshold here
+min_support = min_support_count / num_transactions  # Convert to relative support
+min_conf = 0.9
 
 
-# Read transactions from "small.txt"
-def read_transactions(file_name):
-    with open(file_name, "r") as f:
-        transactions = [list(map(int, line.strip().split())) for line in f.readlines()]
-    return transactions
-
-
-# Convert data to one-hot encoded DataFrame
-def encode_data(data):
-    df = pd.DataFrame(data)
-    encoded_df = pd.get_dummies(df.stack()).groupby(level=0).sum()
-    return encoded_df
-
-
-# data = read_transactions("small")
-
-# Provided data
-data = [
-    [0, 1],
-    [0, 2],
-    [0, 3],
-    [0, 4],
-    [0, 5],
-    [0, 6],
-    [0, 7],
-    [0, 8],
-    [0, 9],
-    [0, 10],
-    [0, 11],
-    [0, 12],
-    [0, 13],
-    [0, 14],
-    [0, 15],
-    [0, 16],
-]
-
-# Generate rules for specified confidence thresholds and save them to files
-minconfs = [0.8, 0.95]
-
-
-# Generate frequent itemsets
-def apriori(data, min_support=0.01):
-    df = encode_data(data)
-    frequent_itemsets = {}
-    n_rows = df.shape[0]
-
-    # Get single itemsets
-    single_itemsets = df.columns[df.sum(axis=0) / n_rows >= min_support].tolist()
-    k = 1
-    current_itemsets = single_itemsets
-
-    while current_itemsets:
-        frequent_itemsets[k] = current_itemsets
-        k += 1
-        current_itemsets = [
-            tuple(sorted(itemset)) for itemset in combinations(single_itemsets, k)
-        ]
-        current_itemsets = [
-            itemset
-            for itemset in current_itemsets
-            if df[list(itemset)].all(axis=1).sum() / n_rows >= min_support
-        ]
-
+def compute_frequent_itemsets(sparse_matrix, unique_items, min_support):
+    frequent_itemsets = []
+    for index, item in enumerate(unique_items):
+        support = sparse_matrix[:, index].mean()
+        if support >= min_support:
+            frequent_itemsets.append((frozenset([item]), support))
     return frequent_itemsets
 
 
-# Generate association rules
-def generate_rules(data, min_support=0.01, min_confidence=0.01):
-    df = encode_data(data)
-    n_rows = df.shape[0]
-    frequent_itemsets = apriori(data, min_support)
-    rules = []
+# Find combinations of items that are often bought together
+print("Finding item combinations that are often bought together...")
+frequent_itemsets = compute_frequent_itemsets(sparse_matrix, unique_items, min_support)
+new_itemsets = frequent_itemsets
 
-    for k, itemsets in frequent_itemsets.items():
-        if k == 1:
-            continue
-        for itemset in itemsets:
-            for i in range(1, k):
-                lefts = list(combinations(itemset, i))
-                for left in lefts:
-                    right = tuple(sorted(set(itemset) - set(left)))
-                    left_support = df[list(left)].all(axis=1).sum() / n_rows
-                    both_support = df[list(itemset)].all(axis=1).sum() / n_rows
-                    confidence = both_support / left_support
-                    if confidence >= min_confidence:
-                        rules.append((left, right, both_support, confidence))
+print(f"Identified {len(frequent_itemsets)} single items that are frequently bought.")
 
-    return rules
+# Check bigger combinations (like pairs, triplets of items, etc.) to see which sets are popular
+level = 1
+while new_itemsets:
+    curr_level_itemsets = []
+    for itemset1, support1 in new_itemsets:
+        for itemset2, support2 in frequent_itemsets:
+            merged = itemset1.union(itemset2)
+            if len(merged) == len(itemset1) + 1:
+                indices = [unique_items.index(item) for item in merged]
+                merged_support = (
+                    sparse_matrix[:, indices].sum(axis=1).A1 == len(merged)
+                ).mean()
+                if merged_support >= min_support:
+                    if (merged, merged_support) not in curr_level_itemsets:
+                        curr_level_itemsets.append((merged, merged_support))
+    frequent_itemsets.extend(curr_level_itemsets)
+    new_itemsets = curr_level_itemsets
+    level += 1
+    print(
+        f"Level {level}: Found {len(curr_level_itemsets)} popular combinations of items."
+    )
 
+# Save our findings into a file for future reference
+output_file_name = "output_file_rules_team5.txt"
+if min_conf != -1:
+    with open(output_file_name, "w") as file:
+        for itemset, support in frequent_itemsets:
+            for item in itemset:
+                antecedent = itemset - frozenset([item])
+                consequent = frozenset([item])
+                if antecedent:
+                    antecedent_indices = [
+                        unique_items.index(item) for item in antecedent
+                    ]
+                    antecedent_support = (
+                        sparse_matrix[:, antecedent_indices].sum(axis=1).A1
+                        == len(antecedent)
+                    ).mean()
+                    confidence = support / antecedent_support
+                    if confidence >= min_conf:
+                        file.write(
+                            f"{' '.join(map(str, antecedent))}|{' '.join(map(str, consequent))}|{support:.2f}|{confidence:.2f}\n"
+                        )
 
-for minconf in minconfs:
-    rules = generate_rules(data, min_support=0.01, min_confidence=minconf)
-    file_name = f"output_file_rules_{minconf}.txt"
-    with open(file_name, "w") as f:
-        for rule in rules:
-            f.write(
-                f"{' '.join(map(str, rule[0]))}|{' '.join(map(str, rule[1]))}|{rule[2]:.4f}|{rule[3]:.4f}\n"
-            )
+    print(f"Saved our findings in {output_file_name}")
+
+# Indicate the end of the process
+print("Process completed.")
