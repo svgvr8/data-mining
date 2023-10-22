@@ -26,7 +26,7 @@ dataset1_counts = [k_counts[label] for label in labels]
 dataset2_counts = [k_counts_2[label] for label in labels]
 
 # Placeholder for the output file name
-output_file_name = "<output_file_name>_plot_items_team5.png"
+output_file_name = "test_plot_items_team5.png"
 
 # Create the figure
 plt.figure(figsize=(16, 10))
