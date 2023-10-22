@@ -41,14 +41,14 @@ bar1 = plt.bar(
     dataset1_counts,
     bar_width,
     color="lightcoral",
-    label="Dataset 1 (Support: 120, Confidence: X)",
+    label="Dataset 1 (Support Count: 120, Confidence: 0.9)",
 )
 bar2 = plt.bar(
     index + bar_width,
     dataset2_counts,
     bar_width,
     color="mediumseagreen",
-    label="Dataset 2 (Support: 75, Confidence: X)",
+    label="Dataset 2 (Support Count: 75, Confidence: 0.9)",
 )
 
 # Increase font size for readability
